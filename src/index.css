@@ -1,0 +1,170 @@
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer components {
+  button {
+    @apply inline-flex items-center justify-center font-semibold rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 select-none gap-2 transition-colors duration-200
+  }
+  button.disabled {
+    @apply opacity-50 pointer-events-none cursor-not-allowed opacity-50
+  }
+}
+
+
+@layer base {
+  /* Heading styles */
+  h1 {
+    @apply text-8xl font-bricolage font-bold;
+  }
+  h2 {
+    @apply text-6xl font-bricolage font-bold;
+  }
+  h3 {
+    @apply text-5xl font-bricolage font-bold;
+  }
+  h4 {
+    @apply text-4xl font-bricolage font-bold;
+  }
+  h5 {
+    @apply text-3xl font-bricolage font-bold;
+  }
+  h6 {
+    @apply text-2xl font-bricolage font-bold;
+  }
+  h7 {
+    @apply text-xl font-bricolage font-bold;
+  }
+  
+  /* Main typography */
+  span {
+    @apply font-normal font-inter;
+  }
+  p {
+    @apply font-normal font-inter;
+  }
+  strong {
+    @apply font-medium font-inter;
+  }
+
+  :root {
+    --font-bricolage: "Bricolage Grotesque", sans-serif;
+    --font-inter: "Inter", sans-serif;
+
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 24 100% 45%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 240 50% 16%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+    
+    --animate-scale-pulse: scale-pulse 1.8s ease-in-out infinite;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 24 100% 45%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 240 50% 16%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border-subtle
+  }
+  body {
+    @apply bg-background-default text-text-default;
+    font-family: var(--font-inter);
+  }
+  
+}
+
+
+@layer utilities {
+  input:-webkit-autofill {
+    /* Make autofill background transparent */
+    box-shadow: 0 0 0 1000px transparent inset !important;
+    -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+
+    /* Make text visible (choose light color for dark theme) */
+    -webkit-text-fill-color: var(--neutral-12) !important;
+    
+    /* Optional: Prevent autofill animation */
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  input:-webkit-autofill:focus {
+    /* Keep transparent background even when focused */
+    box-shadow: 0 0 0 1000px transparent inset !important;
+    -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+
+    /* Keep white text fill on focus */
+    -webkit-text-fill-color: var(--neutral-12) !important;
+  }
+
+  .scrollbar-auto-hide {
+    /* Firefox: thin track that can be toggled */
+    scrollbar-width: thin;
+  }
+  .scrollbar-auto-hide::-webkit-scrollbar {
+    width: 8px;
+    opacity: 0;                /* start hidden */
+    transition: opacity 0.3s;
+  }
+  /* show only when the element has .scrolling */
+  .scrollbar-auto-hide.scrolling::-webkit-scrollbar {
+    opacity: 1;
+  }
+}
+
+
