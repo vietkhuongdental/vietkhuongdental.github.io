@@ -11,9 +11,6 @@ Stack configured:
 
   Then in your repo's Settings → Pages, set the source branch to gh-pages.
 
-   ⚠️ The base in vite.config.ts is set to '/huytran-wedding/' — update this if your GitHub repo has a
-   different name.
-
 
 # React + TypeScript + Vite
 
