@@ -100,7 +100,6 @@ export default function LoginForm({ onSetErrorCode, onSetEmail }: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <LoadingContainer />
       <h4 className="font-bold"> {!isAdmin ? 'Sign in' : 'Admin sign in'}</h4>
 
       <form
