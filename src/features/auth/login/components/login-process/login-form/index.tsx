@@ -4,7 +4,6 @@ import { loginSchema } from '@/features/auth/login/helpers/schema';
 import useLogin from '@/features/auth/login/hooks/api/useLogin';
 import type { UserLogin } from '@/features/auth/login/interface';
 import { FormField } from '@/shared/components/blocks/FormField';
-import LoadingContainer from '@/shared/components/layouts/loading';
 import { Button } from '@/shared/components/ui/Button';
 import { Input } from '@/shared/components/ui/Input';
 import { useToastProvider } from '@/shared/hooks';
