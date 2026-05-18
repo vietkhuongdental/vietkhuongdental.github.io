@@ -3,10 +3,10 @@ import { GenderType, VerifyProfileStatus } from '@/constants';
 export const getStatusColor = (status?: string) => {
   switch (status) {
     case VerifyProfileStatus.Verified:
-    case GenderType.MALE:
+    case GenderType.Nam:
       return 'green';
 
-    case GenderType.FEMALE:
+    case GenderType.Nữ:
     case VerifyProfileStatus.WaitingForApproval:
       return 'yellow';
 

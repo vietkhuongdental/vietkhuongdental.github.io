@@ -36,7 +36,7 @@ type Story = StoryObj<typeof DatePickerInput>;
 
 export const Default: Story = {
   render: () => {
-    const [date, setDate] = useState<Date | undefined>();
+    const [date, setDate] = useState<string | undefined>();
     return (
       <div
         style={{
@@ -49,7 +49,7 @@ export const Default: Story = {
         }}
       >
         <DatePickerInput
-          date={date}
+          date={date ? new Date(date) : undefined}
           placeholder="Please select date"
           setDate={setDate}
         />
