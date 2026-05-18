@@ -4,6 +4,7 @@ import { loginSchema } from '@/features/auth/login/helpers/schema';
 import useLogin from '@/features/auth/login/hooks/api/useLogin';
 import type { UserLogin } from '@/features/auth/login/interface';
 import { FormField } from '@/shared/components/blocks/FormField';
+import LoadingContainer from '@/shared/components/layouts/loading';
 import { Button } from '@/shared/components/ui/Button';
 import { Input } from '@/shared/components/ui/Input';
 import { useToastProvider } from '@/shared/hooks';
@@ -25,6 +26,8 @@ export default function LoginForm({ onSetErrorCode, onSetEmail }: Props) {
   const isAdmin = useMemo(() => pathname.startsWith('/admin'), [pathname]);
 
   const location = useLocation();
+
+  console.log('isAdmin :>> ', isAdmin);
   const from =
     (location.state as { from?: string })?.from || (isAdmin ? '/admin' : '/');
 
@@ -96,6 +99,7 @@ export default function LoginForm({ onSetErrorCode, onSetEmail }: Props) {
 
   return (
     <div className="flex flex-col gap-6">
+      <LoadingContainer />
       <h4 className="font-bold"> {!isAdmin ? 'Sign in' : 'Admin sign in'}</h4>
 
       <form

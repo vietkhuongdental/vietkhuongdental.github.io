@@ -1,8 +1,8 @@
 import type { PicklistOption } from '@/shared/components/blocks/Picklist';
 
 export enum GenderType {
-  Nam = 'nam',
-  Nữ = 'nữ'
+  Nam = 'Nam',
+  Nữ = 'Nữ'
 }
 
 export const GenderTypeMap: Record<GenderType, string> = {
@@ -13,11 +13,11 @@ export const GenderTypeMap: Record<GenderType, string> = {
 export const genderOptions: PicklistOption[] = [
   {
     label: 'Nữ',
-    value: 'nữ'
+    value: 'Nữ'
   },
   {
     label: 'Nam',
-    value: 'nam'
+    value: 'Nam'
   }
 ];
 
