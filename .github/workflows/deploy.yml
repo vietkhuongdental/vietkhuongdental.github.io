@@ -33,9 +33,11 @@ jobs:
 
       - run: pnpm build
         env:
-          # Add your env vars here or via GitHub Secrets:
-          # VITE_API_URL: ${{ secrets.VITE_API_URL }}
           NODE_ENV: production
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY }}
+          VITE_SUPABASE_FUNCTIONS_URL: ${{ secrets.VITE_SUPABASE_FUNCTIONS_URL }}
+          VITE_ZALO_OAID: ${{ secrets.VITE_ZALO_OAID }}
 
       - uses: actions/configure-pages@v5
 
