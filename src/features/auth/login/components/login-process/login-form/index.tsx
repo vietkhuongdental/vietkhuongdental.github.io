@@ -23,17 +23,18 @@ interface Props {
 
 export default function LoginForm({ onSetErrorCode, onSetEmail }: Props) {
   const { pathname } = window.location;
-  const isAdmin = useMemo(() => pathname.startsWith('/admin'), [pathname]);
+  const { authStore } = useAuthStore();
+  const isAdmin = useMemo(
+    () => pathname.startsWith('/admin') || authStore.user?.role === 'admin',
+    [pathname, authStore]
+  );
 
   const location = useLocation();
 
-  console.log('isAdmin :>> ', isAdmin);
   const from =
     (location.state as { from?: string })?.from || (isAdmin ? '/admin' : '/');
 
   const { showToast } = useToastProvider();
-
-  const { authStore } = useAuthStore();
 
   const navigate = useNavigate();
 

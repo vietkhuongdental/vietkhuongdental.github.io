@@ -1,7 +1,7 @@
 const LoadingContainer: React.FC = () => (
   <div className="flex h-screen w-[100%]">
     <main className="flex w-full flex-col items-center justify-center gap-10 border">
-      <svg
+      {/* <svg
         fill="none"
         height="200"
         viewBox="0 0 280 200"
@@ -140,7 +140,7 @@ const LoadingContainer: React.FC = () => (
           d="M279.701 188.3V189.995H273.991V188.3H279.701ZM275.528 185.784H277.6V196.023C277.6 196.445 277.686 196.757 277.87 196.954C278.049 197.151 278.342 197.255 278.751 197.255C278.86 197.255 278.998 197.243 279.177 197.214C279.355 197.185 279.505 197.162 279.632 197.139L280 198.805C279.781 198.88 279.545 198.938 279.292 198.973C279.039 199.008 278.791 199.025 278.55 199.025C277.594 199.025 276.852 198.776 276.328 198.279C275.798 197.781 275.539 197.087 275.539 196.19V185.778L275.528 185.784Z"
           fill="#131032"
         />
-      </svg>
+      </svg> */}
 
       {/* LOADING */}
       <div className="flex flex-col items-center justify-center gap-8 p-8">
