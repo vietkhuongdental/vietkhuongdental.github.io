@@ -7,6 +7,8 @@ export const AdminNavigatorPage = () => {
   const { user, authStore } = useAuthStore();
   const { showToast } = useToastProvider();
 
+  console.log('user?.role :>> ', user?.role);
+
   if (user?.role && user?.role !== RoleType.ADMIN) {
     showToast({
       variant: 'error',
@@ -15,5 +17,5 @@ export const AdminNavigatorPage = () => {
     authStore.logout();
   }
 
-  return <Navigate to={'/user-management'} replace />;
+  return <Navigate to={'/admin/user-management'} replace />;
 };

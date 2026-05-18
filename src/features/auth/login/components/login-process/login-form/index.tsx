@@ -21,11 +21,12 @@ interface Props {
 }
 
 export default function LoginForm({ onSetErrorCode, onSetEmail }: Props) {
-  const { hostname } = window.location;
-  const isAdmin = useMemo(() => hostname.includes('admin'), [hostname]);
+  const { pathname } = window.location;
+  const isAdmin = useMemo(() => pathname.startsWith('/admin'), [pathname]);
 
   const location = useLocation();
-  const from = (location.state as { from?: string })?.from || '/';
+  const from =
+    (location.state as { from?: string })?.from || (isAdmin ? '/admin' : '/');
 
   const { showToast } = useToastProvider();
 
