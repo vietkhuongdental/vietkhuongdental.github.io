@@ -9,9 +9,10 @@ import { Button } from '@/shared/components/ui/Button';
 import { Spinner } from '@/shared/components/ui/Spinner';
 import { useModalProvider } from '@/shared/hooks';
 import { configs } from '@/shared/services/http/configs';
+import { supabaseClient } from '@/shared/services/supabase/client';
 import { isEmpty } from 'lodash-es';
 import { AlertTriangle, CheckCircle2, RefreshCw, XCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 type ActiveTab = 'not-sent' | 'sent';
 
@@ -24,6 +25,12 @@ interface Props {
 // How long to wait for the axios interceptor to complete the /authRefresh call
 // before retrying the failed request.
 const TOKEN_REFRESH_WAIT_MS = 5_000;
+
+// Number of recipients packed into a single Edge Function call.
+const BATCH_SIZE = 5;
+
+// Maximum time (ms) to wait for all Realtime status events after the last batch fires.
+const REALTIME_TIMEOUT_MS = 5 * 60 * 1_000; // 5 minutes
 
 /**
  * Returns true when the error is a 401 Unauthorized, regardless of whether
@@ -55,11 +62,7 @@ const isUnauthorizedError = (err: unknown): boolean => {
 
 export default function SendMessageModal({ selectedUsers }: Props) {
   const { onCloseModal } = useModalProvider();
-  const { onSendZaloZns } = useSendZaloZns({
-    onError: (error) => {
-      console.log('error :>> ', error);
-    }
-  });
+  const { onSendZaloZns } = useSendZaloZns();
   const {
     templates,
     isFetching: isFetchingTemplates,
@@ -74,6 +77,11 @@ export default function SendMessageModal({ selectedUsers }: Props) {
   const [errorMap, setErrorMap] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<ActiveTab>('not-sent');
   const [showResendConfirm, setShowResendConfirm] = useState(false);
+
+  // Tracks pending Realtime channel cleanup between renders
+  const realtimeChannelRef = useRef<ReturnType<
+    typeof supabaseClient.channel
+  > | null>(null);
 
   const templateId = templates?.find(
     (t) => t.key === selectedTemplateId
@@ -109,9 +117,23 @@ export default function SendMessageModal({ selectedUsers }: Props) {
     payload: Parameters<typeof onSendZaloZns>[0],
     attempt = 0
   ): Promise<void> => {
+    // eslint-disable-next-line no-console
+    console.log(
+      `[ZNS] → HTTP sendZaloZns (attempt=${attempt})`,
+      `channel=${payload.channelId}`,
+      `recipients=${payload.recipients.length}`,
+      payload.recipients.map((r) => r.phone)
+    );
+
     try {
-      await onSendZaloZns(payload);
+      const res = await onSendZaloZns(payload);
+
+      // eslint-disable-next-line no-console
+      console.log(`[ZNS] ← HTTP 202 accepted`, res);
     } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(`[ZNS] ← HTTP error (attempt=${attempt})`, err);
+
       if (isUnauthorizedError(err) && attempt === 0) {
         // Yield the event-loop long enough for the interceptor to finish
         // calling /authRefresh and patching the stored access token.
@@ -125,42 +147,125 @@ export default function SendMessageModal({ selectedUsers }: Props) {
     }
   };
 
-  const handleSend = async (usersToSend = notSentUsers) => {
+  /** Normalise a Vietnamese phone number to the 84xxxxxxxxx format. */
+  const normalizePhone = (rawPhone: string): string => {
+    if (rawPhone.startsWith('+84')) return `84${rawPhone.slice(3, 12)}`;
+    if (rawPhone.startsWith('84')) return `84${rawPhone.slice(2, 11)}`;
+    if (rawPhone.startsWith('0')) return `84${rawPhone.slice(1, 10)}`;
+    return `84${rawPhone.slice(0, 9)}`;
+  };
+
+  const handleSend = async (usersToSends = notSentUsers) => {
     if (!selectedTemplateId) return;
 
     setIsSending(true);
 
-    for (const user of usersToSend) {
-      const userId = user.id ?? '';
-      setStatusMap((prev) => ({ ...prev, [userId]: 'sending' }));
+    // Mark every recipient as 'sending' immediately
+    setStatusMap((prev) => {
+      const next = { ...prev };
+      for (const u of usersToSends) next[u.id ?? ''] = 'sending';
+      return next;
+    });
 
-      const rawPhone = user.phone ?? '';
-      let normalizedPhone: string;
+    const resolvedTemplateId =
+      templates?.find((t) => t.key === selectedTemplateId)?.templateId ?? '';
 
-      if (rawPhone.startsWith('+84')) {
-        normalizedPhone = `84${rawPhone.slice(3, 12)}`;
-      } else if (rawPhone.startsWith('84')) {
-        normalizedPhone = `84${rawPhone.slice(2, 11)}`;
-      } else if (rawPhone.startsWith('0')) {
-        normalizedPhone = `84${rawPhone.slice(1, 10)}`;
-      } else {
-        normalizedPhone = `84${rawPhone.slice(0, 9)}`;
+    // ── 1. Open a Supabase Realtime channel ──────────────────────────────────
+    const channelId = `zalo-zns-${Date.now()}`;
+    const channel = supabaseClient.channel(channelId);
+    realtimeChannelRef.current = channel;
+
+    let receivedCount = 0;
+    const totalCount = usersToSends.length;
+
+    // (1): declare batchGate with pending = new Set()
+    // Mutable references updated before each batch fires so the shared
+    // broadcast handler knows which batch is currently in-flight.
+    // Using an object avoids the no-loop-func lint issue (property mutation
+    // vs. variable reassignment in a loop closure).
+    const batchGate: { pending: Set<string>; resolve: (() => void) | null } = {
+      pending: new Set(),
+      resolve: null
+    };
+
+    channel.on(
+      'broadcast',
+      { event: 'zalo-status' },
+      ({
+        payload
+      }: {
+        payload: { customerId: string; error?: string; status: string };
+      }) => {
+        // eslint-disable-next-line no-console
+        console.log(
+          `[ZNS] broadcast zalo-status received`,
+          `customerId=${payload.customerId}`,
+          `status=${payload.status}`,
+          `receivedCount=${receivedCount + 1}/${totalCount}`,
+          payload.error ? `error=${payload.error}` : ''
+        );
+
+        const { customerId, status, error: errorMsg } = payload;
+
+        // BE broadcasts 'sent' for success, 'failed' for failure
+        if (status === 'sent') {
+          setStatusMap((prev) => ({ ...prev, [customerId]: 'success' }));
+        } else {
+          setStatusMap((prev) => ({ ...prev, [customerId]: 'error' }));
+
+          if (errorMsg) {
+            setErrorMap((prev) => ({ ...prev, [customerId]: errorMsg }));
+          }
+        }
+
+        // (3): During sendWithTokenRefreshRetry for a batch, listening the result and update the batchGate
+        // Resolve the current batch when the last pending recipient confirms
+        batchGate.pending.delete(customerId);
+        if (batchGate.pending.size === 0) batchGate.resolve?.();
+
+        receivedCount += 1;
       }
+    );
+
+    // Wait until the subscription is confirmed before firing requests
+    await new Promise<void>((resolve, reject) => {
+      channel.subscribe((status) => {
+        // eslint-disable-next-line no-console
+        console.log(`[ZNS] Realtime channel=${channelId} status=${status}`);
+        if (status === 'SUBSCRIBED') resolve();
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT')
+          reject(new Error(`Realtime subscribe failed: ${status}`));
+      });
+    });
+
+    // ── 2. Split users into batches of BATCH_SIZE and fire them ──────────────
+    for (let i = 0; i < usersToSends.length; i += BATCH_SIZE) {
+      const batch = usersToSends.slice(i, i + BATCH_SIZE);
+
+      const recipients = batch.map((user) => ({
+        userId: user.zaloUserId,
+        phone: normalizePhone(user.phone ?? ''),
+        customerId: user.id ?? '',
+        templateData: { customerName: user.fullName }
+      }));
+      // (2): During Loop through batches and push each userId in the batch[i] into batchGate
+      // Set up the per-batch gate before firing so the broadcast handler can
+      // resolve it as soon as the last recipient in this batch is confirmed.
+      batchGate.pending = new Set(batch.map((u) => u.id ?? ''));
+      const batchDonePromise = new Promise<void>((res) => {
+        batchGate.resolve = res;
+      });
 
       try {
         await sendWithTokenRefreshRetry({
-          userId: user.zaloUserId,
-          phone: normalizedPhone,
-          templateId:
-            templates?.find((t) => t.key === selectedTemplateId)?.templateId ??
-            '', // uuid
+          channelId,
+          templateId: resolvedTemplateId,
           templateUuid: selectedTemplateId,
-          customerId: user.id ?? '',
-          templateData: { customerName: user.fullName }
+          recipients
         });
-        setStatusMap((prev) => ({ ...prev, [userId]: 'success' }));
       } catch (err) {
-        setStatusMap((prev) => ({ ...prev, [userId]: 'error' }));
+        // Entire batch call failed — mark all recipients in this batch as error
+        // and resolve the batch gate immediately (no broadcast will arrive).
         let reason = 'Unknown error';
 
         try {
@@ -170,9 +275,29 @@ export default function SendMessageModal({ selectedUsers }: Props) {
           reason = (err as Error).message ?? reason;
         }
 
-        setErrorMap((prev) => ({ ...prev, [userId]: reason }));
+        for (const user of batch) {
+          const uid = user.id ?? '';
+          setStatusMap((prev) => ({ ...prev, [uid]: 'error' }));
+          setErrorMap((prev) => ({ ...prev, [uid]: reason }));
+          receivedCount += 1;
+        }
+
+        // (4-error): During sending to batch[i] but catched error, clear the batchGate so that be ready for next batch
+        batchGate.pending.clear();
+        batchGate.resolve?.();
       }
+
+      // (4-success): After sending batch[i], mark done batchGate for resolve the result and ready for next batch's batchGate
+      // Wait for every recipient in this batch to be confirmed before the
+      // next batch fires (with a per-batch safety timeout).
+      await Promise.race([
+        batchDonePromise,
+        new Promise<void>((res) => setTimeout(res, REALTIME_TIMEOUT_MS))
+      ]);
     }
+
+    await supabaseClient.removeChannel(channel);
+    realtimeChannelRef.current = null;
 
     setIsSending(false);
   };

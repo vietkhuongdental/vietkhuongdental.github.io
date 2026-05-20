@@ -3,19 +3,23 @@ import { httpSupabaseService, responseWrapper } from '@/shared/services/http';
 import type { UseMutationOptions } from '@tanstack/react-query';
 import { useMutation } from '@tanstack/react-query';
 
-export interface SendZaloZnsPayload {
-  userId: string;
+export interface SendZaloZnsRecipient {
   phone: string;
-  templateId: string; // templateNumber
-  templateUuid: string; // uuid
   customerId: string;
   templateData: {
     customerName: string;
   };
 }
 
+export interface SendZaloZnsBatchPayload {
+  channelId: string;
+  templateId: string; // templateNumber
+  templateUuid: string; // uuid
+  recipients: SendZaloZnsRecipient[];
+}
+
 const mutateSendZaloZns = async (
-  payload: SendZaloZnsPayload
+  payload: SendZaloZnsBatchPayload
 ): Promise<ApiResponseType<unknown>> =>
   await httpSupabaseService.post('/sendZaloZns', payload);
 
@@ -23,15 +27,15 @@ const useSendZaloZns = (
   options?: UseMutationOptions<
     ApiResponseType<unknown>,
     Error,
-    SendZaloZnsPayload
+    SendZaloZnsBatchPayload
   >
 ) => {
   const { mutateAsync: onSendZaloZns, isPending } = useMutation<
     ApiResponseType<unknown>,
     Error,
-    SendZaloZnsPayload
+    SendZaloZnsBatchPayload
   >({
-    mutationFn: async (payload: SendZaloZnsPayload) =>
+    mutationFn: async (payload: SendZaloZnsBatchPayload) =>
       await responseWrapper(mutateSendZaloZns, [payload]),
     onError: ({ message }) => {
       throw new Error(message);
