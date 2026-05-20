@@ -127,7 +127,7 @@ export const routes: RouteObject[] = [
     children: [
       { path: '', element: <HomeNavigatorPage /> },
       { path: 'account', element: <AccountPage /> },
-      { path: '*', element: <Navigate to="/" replace /> }
+      { path: '*', element: <Navigate to="/admin" replace /> }
     ]
   },
   // Admin auth routes

@@ -1,4 +1,4 @@
-import { RoleType, RoleTypeMap } from '@/constants';
+import { RoleType } from '@/constants';
 import { useGetZnsTemplates } from '@/features/user-management/hooks/api/useGetZnsTemplates';
 import useSendZaloZns from '@/features/user-management/hooks/api/useSendZaloZns';
 import useSyncZaloZnsTemplates from '@/features/user-management/hooks/api/useSyncZaloZnsTemplates';
@@ -27,7 +27,7 @@ interface Props {
 const TOKEN_REFRESH_WAIT_MS = 5_000;
 
 // Number of recipients packed into a single Edge Function call.
-const BATCH_SIZE = 5;
+const BATCH_SIZE = 50;
 
 // Maximum time (ms) to wait for all Realtime status events after the last batch fires.
 const REALTIME_TIMEOUT_MS = 5 * 60 * 1_000; // 5 minutes
@@ -244,6 +244,7 @@ export default function SendMessageModal({ selectedUsers }: Props) {
 
       const recipients = batch.map((user) => ({
         userId: user.zaloUserId,
+        // phone: i < 6 ? normalizePhone(user.phone ?? '') : `${user.phone}123`,
         phone: normalizePhone(user.phone ?? ''),
         customerId: user.id ?? '',
         templateData: { customerName: user.fullName }
@@ -350,6 +351,7 @@ export default function SendMessageModal({ selectedUsers }: Props) {
                 setActiveTab('not-sent');
               }}
               isDisabled={isSending || isFetchingTemplates}
+              isLoading={isFetchingTemplates}
               options={templateOptions}
               placeholder="Select a template"
               value={selectedTemplateId}
@@ -429,10 +431,7 @@ export default function SendMessageModal({ selectedUsers }: Props) {
                       {user.fullName}
                     </a>
                     <span className="text-text-secondary text-sm">
-                      {user.role
-                        ? RoleTypeMap[user.role]
-                        : RoleTypeMap[RoleType.PATIENT]}
-                      {user.zaloName ? ` · ${user.zaloName}` : ''}
+                      {user.phone ? ` ${user.phone}` : ''}
                     </span>
                   </div>
                   <div className="ml-auto flex h-5 w-5 items-center justify-center">

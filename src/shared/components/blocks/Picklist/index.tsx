@@ -7,6 +7,7 @@ import {
   SelectItem,
   SelectTrigger
 } from '@/shared/components/ui/Select';
+import { Spinner } from '@/shared/components/ui/Spinner';
 
 export interface PicklistOption {
   [key: string]: string;
@@ -18,6 +19,7 @@ interface PicklistProps {
   options: PicklistOption[];
   value?: string;
   onSetValue?: (value: string) => void;
+  isLoading?: boolean;
   placeholder?: string;
   className?: string;
   size?: 'lg' | 'md' | 'sm' | null;
@@ -35,6 +37,7 @@ export const Picklist = ({
   className,
   size = 'lg',
   isDisabled = false,
+  isLoading = false,
   isError = false,
   leadingIcon,
   trailingIcon = <DropdownIcon />
@@ -47,11 +50,11 @@ export const Picklist = ({
         }
         className={className}
         inputSize={size}
-        isDisabled={isDisabled}
+        isDisabled={isDisabled || isLoading}
         isError={isError}
         leadingIcon={leadingIcon}
         placeholder={placeholder}
-        trailingIcon={trailingIcon}
+        trailingIcon={isLoading ? <Spinner scale="sm" /> : trailingIcon}
         type="text"
         variant="default"
         readOnly
