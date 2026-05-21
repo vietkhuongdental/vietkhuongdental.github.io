@@ -9,7 +9,8 @@ const PatientDirectoryPage: React.FC = () => {
 
   const user = useMemo(() => authStore.user, [authStore]);
 
-  if (user?.role !== RoleType.EXPERT) return <Navigate to={'/'} replace />;
+  if (user?.role !== RoleType.EXPERT)
+    return <Navigate to={'/admin/'} replace />;
   return <PatientDirectory />;
 };
 

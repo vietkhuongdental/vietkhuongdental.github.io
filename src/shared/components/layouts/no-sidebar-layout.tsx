@@ -7,7 +7,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 export default function NoSidebarLayout() {
   const { authStore } = useAuthStore();
   const user = useMemo(() => authStore.user, [authStore]);
-  if (!user) return <Navigate to={'/auth'} replace />;
+  if (!user) return <Navigate to={'/admin/auth'} replace />;
   return (
     <div className="flex min-h-screen">
       <div className="flex max-h-screen flex-1 flex-col overflow-y-auto pt-[72px]">

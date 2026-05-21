@@ -13,7 +13,9 @@ const AuthLayout: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
 
   if (isAuthenticated) {
-    return <Navigate state={{ from: location.pathname }} to="/" replace />;
+    return (
+      <Navigate state={{ from: location.pathname }} to="/admin/" replace />
+    );
   }
 
   return (

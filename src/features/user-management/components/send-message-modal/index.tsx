@@ -20,6 +20,7 @@ type SendStatus = 'error' | 'idle' | 'sending' | 'success';
 
 interface Props {
   selectedUsers: UserResponse[];
+  onDoneSendMessages?: () => void;
 }
 
 // How long to wait for the axios interceptor to complete the /authRefresh call
@@ -60,7 +61,10 @@ const isUnauthorizedError = (err: unknown): boolean => {
   }
 };
 
-export default function SendMessageModal({ selectedUsers }: Props) {
+export default function SendMessageModal({
+  selectedUsers,
+  onDoneSendMessages
+}: Props) {
   const { onCloseModal } = useModalProvider();
   const { onSendZaloZns } = useSendZaloZns();
   const {
@@ -300,6 +304,7 @@ export default function SendMessageModal({ selectedUsers }: Props) {
     await supabaseClient.removeChannel(channel);
     realtimeChannelRef.current = null;
 
+    onDoneSendMessages?.();
     setIsSending(false);
   };
 

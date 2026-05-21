@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 
 export function ProtectedRoute({
   children,
-  redirectTo = '/auth/login'
+  redirectTo = '/admin/auth/login'
 }: {
   children: React.ReactNode;
   redirectTo?: string;

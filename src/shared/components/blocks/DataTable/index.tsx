@@ -43,6 +43,8 @@ interface DataTableProps<TData> {
   initialState?: Partial<TableState>; // {sorting:..., globalFilter:...,  pagination:...} // usually undefined --> auto = first page
   additionalFilterParams?: Record<string, unknown>;
   onAction?: (params: TableParams) => void;
+  /** When this value changes the page index is reset to 0 (e.g. pass the search term). */
+  externalPageReset?: unknown;
 }
 
 export const DataTable = <TData,>({
@@ -54,7 +56,8 @@ export const DataTable = <TData,>({
   className,
   initialState,
   additionalFilterParams,
-  onAction
+  onAction,
+  externalPageReset
 }: DataTableProps<TData>) => {
   // const [rowSelection, setRowSelection] = useState({});
   // const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -80,9 +83,16 @@ export const DataTable = <TData,>({
 
   const handleChangePage = (pageNumber: number) => {
     setPaginationState((prev) => ({ ...prev, pageIndex: pageNumber - 1 }));
-    // setPageNumber(pageNumber);
-    // setPaginationState((prev) => ({ ...prev, pageIndex: pageNumber - 1 }));
   };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPaginationState({ pageIndex: 0, pageSize: newSize });
+  };
+
+  // Reset to first page whenever externalPageReset changes (e.g. search term).
+  useEffect(() => {
+    setPaginationState((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [externalPageReset]);
 
   useEffect(() => {
     if (!onAction) return;
@@ -91,11 +101,9 @@ export const DataTable = <TData,>({
       ...getAdditionalFilterParams(additionalFilterParams),
       search: search ? search.toString() : undefined,
       offset: initialStates.pagination
-        ? paginationState.pageIndex * initialStates.pagination.pageSize
+        ? paginationState.pageIndex * paginationState.pageSize
         : undefined,
-      limit: initialStates.pagination
-        ? initialStates.pagination.pageSize
-        : undefined,
+      limit: initialStates.pagination ? paginationState.pageSize : undefined,
       orderBy: sorting?.[0]?.id ? sorting[0].id : undefined,
       sortBy: sorting?.[0]?.desc ? 'DESC' : 'ASC'
     };
@@ -236,13 +244,17 @@ export const DataTable = <TData,>({
             )}
           </TableBody>
         </Table>
-
       </div>
 
       {/* Pagination — outside the scroll area so it stays visible */}
       {!isEmpty(initialStates.pagination) && tableRows?.length ? (
         <div className="shrink-0 border-t">
-          <DataTablePagination onPageChange={handleChangePage} table={table} />
+          <DataTablePagination
+            onPageChange={handleChangePage}
+            onPageSizeChange={handlePageSizeChange}
+            pageSize={paginationState.pageSize}
+            table={table}
+          />
         </div>
       ) : null}
     </div>

@@ -32,6 +32,7 @@ interface Props {
   inputSearch: string;
   onSetParams: Dispatch<SetStateAction<TableParams>>;
   onSetInputSearch: Dispatch<SetStateAction<string>>;
+  onRefetch?: () => void;
 }
 
 export default function UserList({
@@ -39,7 +40,8 @@ export default function UserList({
   isLoading = false,
   inputSearch,
   onSetParams,
-  onSetInputSearch
+  onSetInputSearch,
+  onRefetch
 }: Props) {
   const { onShowModal } = useModalProvider();
 
@@ -96,7 +98,14 @@ export default function UserList({
     void onShowModal({
       title: 'Gửi tin',
       hideButton: true,
-      children: <SendMessageModal selectedUsers={selectedUsers} />
+      children: (
+        <SendMessageModal
+          onDoneSendMessages={() => {
+            onRefetch?.();
+          }}
+          selectedUsers={selectedUsers}
+        />
+      )
     });
   };
 
@@ -177,6 +186,7 @@ export default function UserList({
             additionalFilterParams={additionalFilterParams}
             columns={columns}
             data={userManagementData?.data || []}
+            externalPageReset={inputSearch}
             isLoading={isLoading}
             onAction={handleGetData}
             page={userManagementData?.page}

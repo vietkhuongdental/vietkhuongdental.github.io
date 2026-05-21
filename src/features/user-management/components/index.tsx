@@ -7,7 +7,8 @@ export default function UserManagement() {
     inputSearch,
     isFetching,
     setParams,
-    setInputSearch
+    setInputSearch,
+    handleInvalidateUsers
   } = useGetListUsers();
 
   return (
@@ -16,6 +17,7 @@ export default function UserManagement() {
         <UserList
           inputSearch={inputSearch}
           isLoading={isFetching}
+          onRefetch={handleInvalidateUsers}
           onSetInputSearch={setInputSearch}
           onSetParams={setParams}
           userManagementData={userManagementData || undefined}

@@ -9,7 +9,8 @@ export default function HealthRecordPage() {
 
   const user = useMemo(() => authStore.user, [authStore]);
 
-  if (user?.role !== RoleType.PATIENT) return <Navigate to={'/'} replace />;
+  if (user?.role !== RoleType.PATIENT)
+    return <Navigate to={'/admin/'} replace />;
 
   return <HealthRecordList />;
 }

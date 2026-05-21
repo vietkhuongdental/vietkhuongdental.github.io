@@ -11,7 +11,9 @@ export default function PrivateLayout() {
   const { isAuthenticated } = useAuthStore();
 
   if (!isAuthenticated) {
-    return <Navigate state={{ from: location.pathname }} to="/auth" replace />;
+    return (
+      <Navigate state={{ from: location.pathname }} to="/admin/auth" replace />
+    );
   }
 
   return (
