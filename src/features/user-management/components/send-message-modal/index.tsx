@@ -153,12 +153,13 @@ export default function SendMessageModal({
 
   /** Normalise a Vietnamese phone number to the 84xxxxxxxxx format. */
   const normalizePhone = (rawPhone: string): string => {
-    if (rawPhone.startsWith('+84') && rawPhone.length > 11)
-      return `84${rawPhone.slice(3, 12)}`;
-    if (rawPhone.startsWith('84') && rawPhone.length > 10)
-      return `84${rawPhone.slice(2, 11)}`;
-    if (rawPhone.startsWith('0')) return `84${rawPhone.slice(1, 10)}`;
-    return `84${rawPhone.slice(0, 9)}`;
+    const trimmedPhone = rawPhone.trim().replace(/\s+/g, '');
+    if (trimmedPhone.startsWith('+84') && trimmedPhone.length > 11)
+      return `84${trimmedPhone.slice(3, 12)}`;
+    if (trimmedPhone.startsWith('84') && trimmedPhone.length > 10)
+      return `84${trimmedPhone.slice(2, 11)}`;
+    if (trimmedPhone.startsWith('0')) return `84${trimmedPhone.slice(1, 10)}`;
+    return `84${trimmedPhone.slice(0, 9)}`;
   };
 
   const handleSend = async (usersToSends = notSentUsers) => {
